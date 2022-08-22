@@ -96,6 +96,12 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
 
     @Override
     public Map<MaptiveId, MaptiveData> getAll() {
+        try {
+            refresh();
+        } catch (IOException e) {
+            System.err.println("Unable to refresh data from file: " + file);
+            e.printStackTrace();
+        }
         return data;
     }
 

@@ -6,14 +6,14 @@ import net.aflb.maptive.auto.core.io.MaptiveDataDao;
 import java.io.IOException;
 import java.util.TimerTask;
 
-public class MaptiveWatcher extends TimerTask {
+public class MaptiveWatcherTask extends TimerTask {
 
     private final MaptiveModifiedHandler handler;
     private final MaptiveClient client;
     private final MaptiveDataDao dao;
     private long trigger;
 
-    public MaptiveWatcher(MaptiveModifiedHandler handler, MaptiveClient client, MaptiveDataDao dao) {
+    public MaptiveWatcherTask(MaptiveModifiedHandler handler, MaptiveClient client, MaptiveDataDao dao) {
         this.handler = handler;
         this.client = client;
         this.dao = dao;
