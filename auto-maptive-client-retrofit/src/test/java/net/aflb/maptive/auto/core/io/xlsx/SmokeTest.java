@@ -3,7 +3,7 @@ package net.aflb.maptive.auto.core.io.xlsx;
 import net.aflb.maptive.auto.client.retrofit.RetrofitMaptiveClient;
 import net.aflb.maptive.auto.core.client.MaptiveClient;
 import net.aflb.maptive.auto.core.io.MaptiveDataDao;
-import net.aflb.maptive.auto.core.watcher.MaptiveWatcherTask;
+import net.aflb.maptive.auto.core.watcher.MaptiveWatcher;
 import net.aflb.maptive.auto.core.watcher.UpdateMaptiveModifiedHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
+import java.util.TimerTask;
 
 class SmokeTest {
 
@@ -60,9 +61,16 @@ class SmokeTest {
 
     @Test
     void smoke() throws Exception {
-        final var watcher = new MaptiveWatcherTask(new UpdateMaptiveModifiedHandler(), client, dao);
+        final var watcher = new MaptiveWatcher(new UpdateMaptiveModifiedHandler(), client, dao);
+        watcher.forceUpdate();
+
         final var timer = new Timer();
-        timer.schedule(watcher, 0, 1000);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                watcher.checkAndUpdate();
+            }
+        }, 0, 1000);
 
         Thread.sleep(1000000);
     }

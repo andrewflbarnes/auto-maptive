@@ -1,0 +1,11 @@
+plugins {
+    id 'io.quarkus'
+}
+
+dependencies {
+    implementation enforcedPlatform("io.quarkus:quarkus-universe-bom:${quarkusVersion}")
+    implementation "io.quarkus:quarkus-arc"
+    implementation "io.quarkus:quarkus-scheduler"
+    implementation(project(":auto-maptive-core"))
+    implementation(project(":auto-maptive-client-retrofit"))
+}

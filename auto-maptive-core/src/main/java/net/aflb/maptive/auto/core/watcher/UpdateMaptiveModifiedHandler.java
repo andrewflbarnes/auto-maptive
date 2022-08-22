@@ -4,6 +4,8 @@ import net.aflb.maptive.auto.core.MaptiveData;
 import net.aflb.maptive.auto.core.MaptiveId;
 import net.aflb.maptive.auto.core.client.MaptiveClient;
 import net.aflb.maptive.auto.core.io.MaptiveDataDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateMaptiveModifiedHandler.class);
 
     @Override
     public void onUpdate(List<List<String>> serverData, Map<MaptiveId, MaptiveData> localData, MaptiveDataDao dao, MaptiveClient client) {
@@ -31,13 +35,12 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
             .map(Map.Entry::getValue)
             .toList();
 
-        System.out.println("Add (" + toAddIds.size() + "): " + toAddIds);
+        LOGGER.info("Add ({}): {}", toAddIds.size(), toAddIds);
         if (!toAddIds.isEmpty()) {
             try {
-                System.out.println(client.addAll(toAdd));
+                LOGGER.debug("{}", client.addAll(toAdd));
             } catch (Exception e) {
-                System.err.println("Failed to add maptive data: " + toAddIds);
-                e.printStackTrace();
+                LOGGER.error("Failed to add maptive data: {}", toAddIds, e);
             }
         }
 
@@ -45,13 +48,12 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
             .filter(id -> !localIds.contains(id))
             .collect(Collectors.toSet());
 
-        System.out.println("Delete (" + toDeleteIds.size() + "): " + toDeleteIds);
+        LOGGER.info("Delete ({}): {}", toDeleteIds.size(), toDeleteIds);
         if (!toDeleteIds.isEmpty()) {
             try {
-                System.out.println(client.delete(new ArrayList<>(toDeleteIds)));
+                LOGGER.debug("{}", client.delete(new ArrayList<>(toDeleteIds)));
             } catch (Exception e) {
-                System.err.println("Failed to add delete data: " + toDeleteIds);
-                e.printStackTrace();
+                LOGGER.error("Failed to add delete data: {}", toDeleteIds, e);
             }
         }
 
@@ -70,18 +72,13 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
             .filter(e -> !serverData.contains(e.getValue()))
             .map(Map.Entry::getKey)
             .collect(Collectors.toSet());
-        System.out.println("Update (" + toUpdateIds.size() + "): " + toUpdateIds.stream().map(MaptiveId::id).toList());
-//        toUpdateIds.forEach(id -> {
-//            System.out.println(id);
-//            System.out.println(simpleLocalData.get(id));
-//            System.out.println(serverData.stream().filter(d -> id.equals(d.get(2))).findFirst().get());
-//        });
+        LOGGER.info("Update ({}): {}", toUpdateIds.size(), toUpdateIds.stream().map(MaptiveId::id).toList());
+
         for (final var id : toUpdateIds) {
             try {
-                System.out.println(client.update(id, localData.get(id).getIdLessColumnData()));
+                LOGGER.debug("{}", client.update(id, localData.get(id).getIdLessColumnData()));
             } catch (Exception e) {
-                System.err.println("Failed to update maptive data: " + id);
-                e.printStackTrace();
+                LOGGER.error("Failed to update maptive data: {}", id, e);
             }
         }
     }

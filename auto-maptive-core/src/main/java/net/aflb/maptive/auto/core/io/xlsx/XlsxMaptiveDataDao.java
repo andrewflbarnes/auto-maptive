@@ -6,6 +6,8 @@ import net.aflb.maptive.auto.core.io.MaptiveDataDao;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,6 +23,8 @@ import java.util.stream.StreamSupport;
 
 public class XlsxMaptiveDataDao implements MaptiveDataDao {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(XlsxMaptiveDataDao.class);
+
     private final File file;
     private Map<MaptiveId, MaptiveData> data;
 
@@ -33,7 +37,7 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
         return new XlsxMaptiveDataDao(f);
     }
 
-    public static XlsxMaptiveDataDao forFile(String file) throws IOException  {
+    public static XlsxMaptiveDataDao forFile(String file) throws IOException {
         return new XlsxMaptiveDataDao(new File(file));
     }
 
@@ -99,7 +103,7 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
         try {
             refresh();
         } catch (IOException e) {
-            System.err.println("Unable to refresh data from file: " + file);
+            LOGGER.error("Unable to refresh data from file: {}", file);
             e.printStackTrace();
         }
         return data;

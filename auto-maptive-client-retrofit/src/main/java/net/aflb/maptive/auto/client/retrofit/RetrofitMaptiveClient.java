@@ -6,20 +6,25 @@ import net.aflb.maptive.auto.core.client.MaptiveClient;
 import net.aflb.maptive.auto.core.MaptiveData;
 import net.aflb.maptive.auto.core.MaptiveId;
 import okhttp3.OkHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class RetrofitMaptiveClient implements MaptiveClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RetrofitMaptiveClient.class);
     private static final GsonConverterFactory GSON_CONVERTER = GsonConverterFactory.create();
     private static final Gson GSON = new Gson();
 
@@ -43,25 +48,32 @@ public class RetrofitMaptiveClient implements MaptiveClient {
         final var delegate = new OkHttpClient.Builder()
             .addInterceptor(chain -> {
                 final var req = chain.request();
-                if (req.url().queryParameter("data[50][0]") == null) {
-                    System.out.println(req.url());
-                } else {
-                    System.out.println("TRUNCATING LARGE ADD");
-                    System.out.println(req.url().host());
-                    System.out.println(req.url().encodedPath());
+                if (LOGGER.isDebugEnabled()) {
+                    final var url = req.url();
+                    final var sanitisedQps = url.queryParameterNames().stream()
+                        .filter(qp -> !qp.startsWith("data["))
+                        .filter(qp -> !qp.equals("key"))
+                        .filter(qp -> !qp.equals("map_id"))
+                        .map(qp -> "%s=%s".formatted(qp, url.queryParameter(qp)))
+                        .collect(Collectors.toSet());
+                    LOGGER.debug("{} http{}://{}/{}?{}",
+                        req.method(),
+                        url.isHttps() ? "s" : "",
+                        url.host(),
+                        url.encodedPath(),
+                        sanitisedQps);
                 }
-                System.out.println(req.method());
                 return chain.proceed(req);
             })
             .addInterceptor(chain -> {
                 final var req = chain.request();
                 if ("true".equalsIgnoreCase(req.url().queryParameter("delete_all"))) {
-                    System.out.println("Increase timeout to 60s for delete all");
+                    LOGGER.warn("Increase timeout to 60s for delete all");
                     return chain.withReadTimeout(60, TimeUnit.SECONDS).proceed(req);
                 }
 
                 if (req.url().queryParameter("data[50][0]") != null) {
-                    System.out.println("Increase timeout to 60s for large add");
+                    LOGGER.warn("Increase timeout to 60s for large add");
                     return chain
                         .withReadTimeout(60, TimeUnit.SECONDS)
                         .proceed(req);
@@ -82,67 +94,78 @@ public class RetrofitMaptiveClient implements MaptiveClient {
 
     @Override
     public MaptiveApiResponse getAll() throws IOException {
+        LOGGER.debug("Get all records");
         final var resp = api.get(apiKey, mapId, Collections.emptyList()).execute();
         return coerce(resp);
     }
 
     @Override
     public MaptiveApiResponse get(List<String> ids) throws IOException{
+        LOGGER.debug("Getting records: {}", ids);
         final var resp = api.get(apiKey, mapId, ids).execute();
         return coerce(resp);
     }
 
     @Override
     public MaptiveApiResponse add(MaptiveData data) throws IOException {
-        System.out.println(data);
-        System.out.println(data.getColumnData());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Adding record {}", data.get("QUERY #")); // TODO should be configurable/determined
+        }
         final var resp = api.create(apiKey, mapId, data.getColumnData()).execute();
         return coerce(resp);
     }
 
     @Override
     public MaptiveApiResponse addAll(Collection<MaptiveData> data) throws IOException {
-        // TODO batch?
         Response<MaptiveApiResponse> resp = null;
         final Map<String, String> columnData = new LinkedHashMap<>();
+        final List<String> ids = new ArrayList<>();
         int i = 0;
         for (final var item : data) {
             int j = 0;
             for (final var val : item.getData().values()) {
+                if (j == 2) { // TODO should be configurable/determined
+                    ids.add(val);
+                }
                 columnData.put("data[%d][%d]".formatted(i, j), val);
                 j++;
             }
             i++;
             if (i == 5) {
+                LOGGER.debug("Batch adding {} records: {}", ids.size(), ids);
                 resp = api.create(apiKey, mapId, columnData).execute();
-                System.out.println(coerce(resp));
-                i=0;
+                LOGGER.debug("Batched add all response: {}", coerce(resp));
+                i = 0;
+                ids.clear();
                 columnData.clear();
             }
         }
 
-//        columnData.forEach((k, v) -> System.out.printf("%s=%s%n", k, v));
         if (i > 0) {
+            LOGGER.debug("Batch adding {} records: {}", ids.size(), ids);
             resp = api.create(apiKey, mapId, columnData).execute();
-            System.out.println(coerce(resp));
+            LOGGER.debug("Batched add all response: {}", coerce(resp));
         }
         return coerce(resp);
     }
 
     @Override
     public MaptiveApiResponse update(MaptiveId id, Map<String, String> data) throws IOException {
+        LOGGER.debug("Updating record: {}", id);
         final var resp = api.edit(apiKey, mapId, id.id(), data).execute();
         return coerce(resp);
     }
 
     @Override
     public MaptiveApiResponse delete(List<String> ids) throws IOException {
+        LOGGER.debug("Deleting records: {}", ids);
         final var resp = api.delete(apiKey, mapId, ids).execute();
         return coerce(resp);
     }
 
     @Override
     public MaptiveApiResponse deleteAll() throws IOException {
+        LOGGER.debug("Deleting all records");
         final var resp = api.deleteAll(apiKey, mapId).execute();
         return coerce(resp);
     }
