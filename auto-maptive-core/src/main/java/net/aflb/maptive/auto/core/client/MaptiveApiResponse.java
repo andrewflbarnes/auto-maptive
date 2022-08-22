@@ -1,4 +1,4 @@
-package net.aflb.maptive.auto.client;
+package net.aflb.maptive.auto.core.client;
 
 import java.util.List;
 

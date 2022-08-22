@@ -1,6 +1,6 @@
 package net.aflb.maptive.auto.client.retrofit;
 
-import net.aflb.maptive.auto.client.MaptiveApiResponse;
+import net.aflb.maptive.auto.core.client.MaptiveApiResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.POST;

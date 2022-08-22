@@ -1,8 +1,8 @@
 package net.aflb.maptive.auto.client.retrofit;
 
 import com.google.gson.Gson;
-import net.aflb.maptive.auto.client.MaptiveApiResponse;
-import net.aflb.maptive.auto.client.MaptiveClient;
+import net.aflb.maptive.auto.core.client.MaptiveApiResponse;
+import net.aflb.maptive.auto.core.client.MaptiveClient;
 import net.aflb.maptive.auto.core.MaptiveData;
 import net.aflb.maptive.auto.core.MaptiveId;
 import okhttp3.OkHttpClient;
@@ -13,7 +13,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,29 +20,26 @@ import java.util.concurrent.TimeUnit;
 
 public class RetrofitMaptiveClient implements MaptiveClient {
 
-    public static final String DEFAULT_PROTO = "https";
-    public static final String DEFAULT_HOST = "fortress.maptive.com";
-    public static final String DEFAULT_BASE_PATH = "ver4/classes/api/v1.0/";
-
     private static final GsonConverterFactory GSON_CONVERTER = GsonConverterFactory.create();
     private static final Gson GSON = new Gson();
 
     private final Retrofit client;
     private final RetrofitMaptiveApi api;
+    private final String apiKey;
+    private final String mapId;
 
-    public static RetrofitMaptiveClient production() {
-        return to(DEFAULT_HOST);
+    public static RetrofitMaptiveClient production(String apiKey, String mapId) {
+        return new RetrofitMaptiveClient(ServerConfig.production(), apiKey, mapId);
     }
 
-    public static RetrofitMaptiveClient to(String host) {
-        return new RetrofitMaptiveClient(host, DEFAULT_BASE_PATH);
+    public static RetrofitMaptiveClient to(String host, String apiKey, String mapId) {
+        return new RetrofitMaptiveClient(ServerConfig.forHost(host), apiKey, mapId);
     }
 
-    public RetrofitMaptiveClient(String host, String basePath) {
-        this(DEFAULT_PROTO, host, basePath);
-    }
+    public RetrofitMaptiveClient(ServerConfig serverConfig, String apiKey, String mapId) {
+        this.apiKey = apiKey;
+        this.mapId = mapId;
 
-    public RetrofitMaptiveClient(String proto, String host, String basePath) {
         final var delegate = new OkHttpClient.Builder()
             .addInterceptor(chain -> {
                 final var req = chain.request();
@@ -76,7 +72,7 @@ public class RetrofitMaptiveClient implements MaptiveClient {
             .build();
 
         client = new Retrofit.Builder()
-            .baseUrl("%s://%s/%s".formatted(proto, host, basePath))
+            .baseUrl(serverConfig.baseUrl())
             .addConverterFactory(GSON_CONVERTER)
             .client(delegate)
             .build();
@@ -85,19 +81,19 @@ public class RetrofitMaptiveClient implements MaptiveClient {
     }
 
     @Override
-    public MaptiveApiResponse getAll(String apiKey, String mapId) throws IOException {
+    public MaptiveApiResponse getAll() throws IOException {
         final var resp = api.get(apiKey, mapId, Collections.emptyList()).execute();
         return coerce(resp);
     }
 
     @Override
-    public MaptiveApiResponse get(String apiKey, String mapId, List<String> ids) throws IOException{
+    public MaptiveApiResponse get(List<String> ids) throws IOException{
         final var resp = api.get(apiKey, mapId, ids).execute();
         return coerce(resp);
     }
 
     @Override
-    public MaptiveApiResponse add(String apiKey, String mapId, MaptiveData data) throws IOException {
+    public MaptiveApiResponse add(MaptiveData data) throws IOException {
         System.out.println(data);
         System.out.println(data.getColumnData());
         final var resp = api.create(apiKey, mapId, data.getColumnData()).execute();
@@ -105,7 +101,7 @@ public class RetrofitMaptiveClient implements MaptiveClient {
     }
 
     @Override
-    public MaptiveApiResponse addAll(String apiKey, String mapId, Collection<MaptiveData> data) throws IOException {
+    public MaptiveApiResponse addAll(Collection<MaptiveData> data) throws IOException {
         // TODO batch?
         Response<MaptiveApiResponse> resp = null;
         final Map<String, String> columnData = new LinkedHashMap<>();
@@ -134,19 +130,19 @@ public class RetrofitMaptiveClient implements MaptiveClient {
     }
 
     @Override
-    public MaptiveApiResponse update(String apiKey, String mapId, MaptiveId id, Map<String, String> data) throws IOException {
+    public MaptiveApiResponse update(MaptiveId id, Map<String, String> data) throws IOException {
         final var resp = api.edit(apiKey, mapId, id.id(), data).execute();
         return coerce(resp);
     }
 
     @Override
-    public MaptiveApiResponse delete(String apiKey, String mapId, List<String> ids) throws IOException {
+    public MaptiveApiResponse delete(List<String> ids) throws IOException {
         final var resp = api.delete(apiKey, mapId, ids).execute();
         return coerce(resp);
     }
 
     @Override
-    public MaptiveApiResponse deleteAll(String apiKey, String mapId) throws IOException {
+    public MaptiveApiResponse deleteAll() throws IOException {
         final var resp = api.deleteAll(apiKey, mapId).execute();
         return coerce(resp);
     }
