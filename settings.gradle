@@ -9,4 +9,5 @@
 
 rootProject.name = 'auto-maptive'
 include('auto-maptive-core')
-include('auto-maptive-client')
+include('auto-maptive-client-retrofit')
+include('auto-maptive-app')
