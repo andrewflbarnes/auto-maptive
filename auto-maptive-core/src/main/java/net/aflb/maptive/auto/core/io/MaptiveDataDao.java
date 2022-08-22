@@ -8,4 +8,6 @@ import java.util.Map;
 public interface MaptiveDataDao {
 
     Map<MaptiveId, MaptiveData> getAll();
+
+    long lastModified();
 }

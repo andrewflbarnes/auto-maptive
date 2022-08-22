@@ -98,4 +98,9 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
     public Map<MaptiveId, MaptiveData> getAll() {
         return data;
     }
+
+    @Override
+    public long lastModified() {
+        return file.lastModified();
+    }
 }
