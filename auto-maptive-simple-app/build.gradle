@@ -1,0 +1,44 @@
+//buildscript {
+//    repositories {
+//        mavenCentral()
+//        gradlePluginPortal()
+//    }
+//    dependencies {
+//        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
+//    }
+//}
+//
+//apply plugin: 'java'
+//apply plugin: 'com.github.johnrengelman.shadow'
+
+dependencies {
+    implementation(project(":auto-maptive-core"))
+    implementation(project(":auto-maptive-client-retrofit"))
+
+    runtimeOnly "ch.qos.logback:logback-classic:${logbackVersion}"
+}
+
+//application {
+//    mainClass = "net.aflb.maptive.auto.simple.app.Application"
+//}
+
+jar {
+    manifest {
+        attributes 'Main-Class': "net.aflb.maptive.auto.simple.app.Application"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+//task customFatJar(type: Jar) {
+//    manifest {
+//        attributes 'Main-Class': 'net.aflb.maptive.auto.simple.app.Application'
+//    }
+//    baseName = 'all-in-one-jar'
+//    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+//    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+//    with jar
+//}
