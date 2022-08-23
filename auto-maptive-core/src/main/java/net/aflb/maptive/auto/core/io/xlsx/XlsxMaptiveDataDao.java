@@ -3,6 +3,7 @@ package net.aflb.maptive.auto.core.io.xlsx;
 import net.aflb.maptive.auto.core.MaptiveData;
 import net.aflb.maptive.auto.core.MaptiveId;
 import net.aflb.maptive.auto.core.io.MaptiveDataDao;
+import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -37,8 +38,12 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
         return new XlsxMaptiveDataDao(f);
     }
 
-    public static XlsxMaptiveDataDao forFile(String file) throws IOException {
-        return new XlsxMaptiveDataDao(new File(file));
+    public static XlsxMaptiveDataDao forFile(String file) throws IOException, NotXlsxFileException {
+        try {
+            return new XlsxMaptiveDataDao(new File(file));
+        } catch (NotOfficeXmlFileException e) {
+            throw new NotXlsxFileException("Not an XLSX file: " + file, e);
+        }
     }
 
     public XlsxMaptiveDataDao(File file) throws IOException {

@@ -85,8 +85,8 @@ public class AppConfig {
     private String validateToAbsoluteFile(String file) {
         final var f = absoluteFile(file);
         final var ret = f.getAbsolutePath();
-        if (!f.exists()) {
-            throw new AppException("Config file does not exist: " + ret);
+        if (!f.exists() || !f.isFile()) {
+            throw new AppException("Local data file does not exist: " + ret);
         }
 
         return ret;

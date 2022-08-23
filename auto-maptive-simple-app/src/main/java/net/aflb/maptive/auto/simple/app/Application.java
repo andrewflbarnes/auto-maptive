@@ -3,6 +3,7 @@ package net.aflb.maptive.auto.simple.app;
 import net.aflb.maptive.auto.client.retrofit.RetrofitMaptiveClient;
 import net.aflb.maptive.auto.core.client.MaptiveClient;
 import net.aflb.maptive.auto.core.io.MaptiveDataDao;
+import net.aflb.maptive.auto.core.io.xlsx.NotXlsxFileException;
 import net.aflb.maptive.auto.core.io.xlsx.XlsxMaptiveDataDao;
 import net.aflb.maptive.auto.core.watcher.MaptiveModifiedHandler;
 import net.aflb.maptive.auto.core.watcher.MaptiveWatcher;
@@ -67,7 +68,9 @@ public class Application {
     }
 
     public void destroy() {
-        timer.cancel();
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     private MaptiveModifiedHandler buildHandler() {
@@ -79,6 +82,10 @@ public class Application {
     }
 
     private MaptiveDataDao buildDao() throws IOException {
-        return XlsxMaptiveDataDao.forFile(config.getFile());
+        try {
+            return XlsxMaptiveDataDao.forFile(config.getFile());
+        } catch (NotXlsxFileException e) {
+            throw new AppException(e.getMessage());
+        }
     }
 }
