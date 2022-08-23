@@ -20,10 +20,10 @@ public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger("auto-maptive");
 
     public static void main(String[] args) {
-        final var config = AppConfig.from("application.properties");
-        final var app = new Application(config);
-        registerShutdownHook(app::destroy);
         try {
+            final var config = AppConfig.from("application.properties");
+            final var app = new Application(config);
+            registerShutdownHook(app::destroy);
             app.start();
         } catch (AppException e) {
             LOGGER.error(e.getMessage());
