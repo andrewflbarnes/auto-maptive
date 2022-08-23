@@ -1,5 +1,6 @@
 package net.aflb.maptive.auto.simple.app;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,7 +21,7 @@ public class AppConfig {
         try {
             schedule = Long.parseLong(strSchedule);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid schedule property, must be a number: " + strSchedule);
+            throw new AppException("Invalid schedule property, must be a number: " + strSchedule);
         }
         return new AppConfig(
             resolved.get(0),
@@ -29,12 +30,16 @@ public class AppConfig {
             schedule);
     }
 
-    private static byte[] readFromFile(String file) {
+    private static File absoluteFile(String file) {
         final var simplePath = Paths.get(file);
-        final var f = simplePath.toAbsolutePath().toFile();
+        return simplePath.toAbsolutePath().toFile();
+    }
+
+    private static byte[] readFromFile(String file) {
+        final var f = absoluteFile(file);
         final var strAbsPath = f.getAbsolutePath();
         if (!f.exists()) {
-            throw new IllegalArgumentException("Config file does not exist: " + strAbsPath);
+            throw new AppException("Config file does not exist: " + strAbsPath);
         }
 
         try {
@@ -57,7 +62,7 @@ public class AppConfig {
         for (final var key : keys) {
             final var val = props.get(key);
             if (val == null || val.isBlank()) {
-                throw new IllegalArgumentException("Property is missing or not set: " + key);
+                throw new AppException("Property is missing or not set: " + key);
             }
             resolvedProps.add(val);
         }
@@ -73,8 +78,18 @@ public class AppConfig {
     public AppConfig(String apiKey, String mapId, String file, long schedule) {
         this.apiKey = apiKey;
         this.mapId = mapId;
-        this.file = file;
+        this.file = validateToAbsoluteFile(file);
         this.schedule = schedule;
+    }
+
+    private String validateToAbsoluteFile(String file) {
+        final var f = absoluteFile(file);
+        final var ret = f.getAbsolutePath();
+        if (!f.exists()) {
+            throw new AppException("Config file does not exist: " + ret);
+        }
+
+        return ret;
     }
 
     public String getApiKey() {

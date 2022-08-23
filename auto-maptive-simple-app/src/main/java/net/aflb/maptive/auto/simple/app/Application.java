@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -24,6 +25,9 @@ public class Application {
         registerShutdownHook(app::destroy);
         try {
             app.start();
+        } catch (AppException e) {
+            LOGGER.error(e.getMessage());
+            System.exit(1);
         } catch (Exception e) {
             LOGGER.error("Error while starting application :(", e);
             System.exit(1);
@@ -67,7 +71,7 @@ public class Application {
     }
 
     private MaptiveModifiedHandler buildHandler() {
-        return  new UpdateMaptiveModifiedHandler();
+        return new UpdateMaptiveModifiedHandler();
     }
 
     private MaptiveClient buildClient() {
