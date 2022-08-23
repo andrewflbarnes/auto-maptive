@@ -53,7 +53,7 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
             try {
                 LOGGER.debug("{}", client.delete(new ArrayList<>(toDeleteIds)));
             } catch (Exception e) {
-                LOGGER.error("Failed to add delete data: {}", toDeleteIds, e);
+                LOGGER.error("Failed to delete maptive data: {}", toDeleteIds, e);
             }
         }
 
