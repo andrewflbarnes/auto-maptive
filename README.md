@@ -10,7 +10,7 @@ Automatic xlsx uploads to maptive API
 ## Native image build (Graal)
 
 ```bash
-native-image -jar auto-maptive-simple-app/build/libs/auto-maptive-simple-app*.jar
+native-image -jar auto-maptive-simple-app/build/libs/auto-maptive-simple-app-*.jar --no-fallback
 ```
 
 ## Run
