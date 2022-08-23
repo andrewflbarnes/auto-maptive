@@ -11,4 +11,4 @@ pluginManagement {
 
 include('auto-maptive-core')
 include('auto-maptive-client-retrofit')
-include('auto-maptive-app')
+//include('auto-maptive-app')
