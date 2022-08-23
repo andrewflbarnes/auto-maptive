@@ -17,7 +17,7 @@ import java.util.TimerTask;
 
 public class Application {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("auto-maptive");
+    private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
         try {
