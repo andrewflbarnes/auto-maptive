@@ -101,7 +101,6 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
                 final var serverValue = match.get(0);
                 final var different = !localValue.equals(serverValue);
                 if (different) {
-                    LOGGER.debug("local {} server {}", localValue.get(1).getClass().getName(),serverValue.get(1).getClass().getName());
                     LOGGER.debug("Changes detected for {}", localId);
                     LOGGER.debug("{} server: {}", localId, serverValue);
                     LOGGER.debug("{} local : {}", localId, localValue);

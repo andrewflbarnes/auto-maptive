@@ -57,7 +57,6 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
         this.idCol = idCol;
         this.dateTimeFormat = dateTimeFormat;
         this.dtf = new SimpleDateFormat(dateTimeFormat);
-//        this.dtf = DateTimeFormatter.ofPattern(dateTimeFormat);
         refresh();
     }
 
@@ -92,6 +91,8 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
                                 return formatter.formatCellValue(r);
                             })
                             .map(v -> v.replace("\"", ""))
+                            .map(v -> v.replaceAll("\\s*$", ""))
+                            .map(v -> v.replaceAll("^\\s*", ""))
                             .forEachOrdered(item::add);
 
                         // TODO make this configurable
