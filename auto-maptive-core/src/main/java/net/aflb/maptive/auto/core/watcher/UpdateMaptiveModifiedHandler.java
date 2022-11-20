@@ -16,6 +16,12 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateMaptiveModifiedHandler.class);
 
+    private final int idColumnIndex;
+
+    public UpdateMaptiveModifiedHandler(int idColumnIndex) {
+        this.idColumnIndex = idColumnIndex;
+    }
+
     @Override
     public void onUpdate(List<List<String>> serverData, Map<MaptiveId, MaptiveData> localData, MaptiveDataDao dao, MaptiveClient client) {
         final var serverIds = serverData.stream()
@@ -69,7 +75,40 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
             ));
 
         final var toUpdateIds = simpleLocalData.entrySet().stream()
-            .filter(e -> !serverData.contains(e.getValue()))
+            .filter(e -> {
+                final var localId = e.getKey().id();
+                final var match = serverData.stream()
+                    .filter(sd -> {
+                        if (sd.size() <= idColumnIndex) {
+                            return false;
+                        }
+                        return sd.get(idColumnIndex).equals(localId);
+                    }).toList();
+
+                if (match.isEmpty()) {
+                    LOGGER.warn("Discarding possible update for {} which has no corresponding server data", localId);
+                    return false;
+                }
+
+                if (match.size() > 1) {
+                    LOGGER.warn("Multiple matching server entries for {} found (DELETE DUPLICATE IDs!) - using first only", localId);
+                    for (var i = 1; i < match.size(); i++) {
+                        LOGGER.debug("Discarding duplicate entry for {}: {}", localId, match.get(i));
+                    }
+                }
+
+                final var localValue = e.getValue();
+                final var serverValue = match.get(0);
+                final var different = !localValue.equals(serverValue);
+                if (different) {
+                    LOGGER.debug("local {} server {}", localValue.get(1).getClass().getName(),serverValue.get(1).getClass().getName());
+                    LOGGER.debug("Changes detected for {}", localId);
+                    LOGGER.debug("{} server: {}", localId, serverValue);
+                    LOGGER.debug("{} local : {}", localId, localValue);
+                }
+
+                return different;
+            })
             .map(Map.Entry::getKey)
             .collect(Collectors.toSet());
         LOGGER.info("Update ({}): {}", toUpdateIds.size(), toUpdateIds.stream().map(MaptiveId::id).toList());

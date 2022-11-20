@@ -6,6 +6,7 @@ import net.aflb.maptive.auto.core.client.MaptiveClient;
 import net.aflb.maptive.auto.core.MaptiveData;
 import net.aflb.maptive.auto.core.MaptiveId;
 import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -176,12 +178,43 @@ public class RetrofitMaptiveClient implements MaptiveClient {
 
         final var errorBody = resp.errorBody();
         if (errorBody != null) {
-            return GSON.fromJson(resp.errorBody().string(), MaptiveApiResponse.class);
+            final var errorBodyString = Optional.of(resp)
+                .map(Response::errorBody)
+                .map(r -> {
+                    try {
+                        return r.string();
+                    } catch (IOException e) {
+                        LOGGER.error("Unable to read error response body:{}", e.getMessage());
+                        return "{}";
+                    }
+                })
+                .orElse("{}");
+            try {
+                return GSON.fromJson(errorBodyString, MaptiveApiResponse.class);
+            } catch (Exception e) {
+                LOGGER.error("Unable to decode error response body: {}", errorBodyString);
+            }
         }
 
         final var unknown = new MaptiveApiResponse();
         unknown.setCode(String.valueOf(resp.code()));
-        unknown.setMessage(resp.message());
+        final var message = Optional.of(resp)
+            .map(Response::message)
+            .orElseGet(() -> {
+                final var code = resp.code();
+                if (code > 199) {
+                    return "Success";
+                } else if (code > 299) {
+                    return "Redirection";
+                } else if (code > 399) {
+                    return "Authorization issue";
+                } else if (code > 499) {
+                    return "Maptive API issue";
+                } else {
+                    return "Unknown";
+                }
+            });
+        unknown.setMessage(message);
         return unknown;
     }
 }

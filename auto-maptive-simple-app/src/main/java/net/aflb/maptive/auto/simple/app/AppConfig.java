@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -15,19 +13,14 @@ public class AppConfig {
     public static AppConfig from(String file) {
         final var fileContents = readFromFile(file);
         final var props = fileToProps(fileContents);
-        final var resolved = getProps(props, "key", "map", "file", "schedule");
-        final var strSchedule = resolved.get(3);
-        final long schedule;
-        try {
-            schedule = Long.parseLong(strSchedule);
-        } catch (NumberFormatException e) {
-            throw new AppException("Invalid schedule property, must be a number: " + strSchedule);
-        }
         return new AppConfig(
-            resolved.get(0),
-            resolved.get(1),
-            resolved.get(2),
-            schedule);
+            getStringProp(props, "key"),
+            getStringProp(props, "map"),
+            getStringProp(props, "file"),
+            getLongProp(props, "schedule"),
+            getStringProp(props, "id-col"),
+            getIntProp(props, "id-col-index"),
+            getStringProp(props, "date-format"));
     }
 
     private static File absoluteFile(String file) {
@@ -57,29 +50,50 @@ public class AppConfig {
             .collect(Collectors.toMap(e -> e[0], e -> e[1]));
     }
 
-    private static List<String> getProps(Map<String, String> props, String ...keys) {
-        final List<String> resolvedProps = new ArrayList<>();
-        for (final var key : keys) {
-            final var val = props.get(key);
-            if (val == null || val.isBlank()) {
-                throw new AppException("Property is missing or not set: " + key);
-            }
-            resolvedProps.add(val);
+    private static String getStringProp(Map<String, String> props, String key) {
+        final var val = props.get(key);
+        if (val == null || val.isBlank()) {
+            throw new AppException("Property is missing or not set: " + key);
         }
 
-        return resolvedProps;
+        return val;
+    }
+
+    private static long getLongProp(Map<String, String> props, String key) {
+        final var strProp = getStringProp(props, key);
+        try {
+            return Long.parseLong(strProp);
+        } catch (NumberFormatException e) {
+            throw new AppException("Invalid "+ key + " property, must be a number: " + strProp);
+        }
+    }
+
+    private static int getIntProp(Map<String, String> props, String key) {
+        final var strProp = getStringProp(props, key);
+        try {
+            return Integer.parseInt(strProp);
+        } catch (NumberFormatException e) {
+            throw new AppException("Invalid "+ key + " property, must be a number: " + strProp);
+        }
     }
 
     private final String apiKey;
     private final String mapId;
     private final String file;
     private final long schedule;
+    private final String idColumn;
+    private final int idColumnIndex;
+    private final String dateFormat;
 
-    public AppConfig(String apiKey, String mapId, String file, long schedule) {
+    public AppConfig(String apiKey, String mapId, String file, long schedule, String idColumn, int idColumnIndex,
+                     String dateFormat) {
         this.apiKey = apiKey;
         this.mapId = mapId;
         this.file = validateToAbsoluteFile(file);
         this.schedule = schedule;
+        this.idColumn = idColumn;
+        this.idColumnIndex = idColumnIndex;
+        this.dateFormat = dateFormat;
     }
 
     private String validateToAbsoluteFile(String file) {
@@ -106,5 +120,17 @@ public class AppConfig {
 
     public long getSchedule() {
         return schedule;
+    }
+
+    public String getIdColumn() {
+        return idColumn;
+    }
+
+    public int getIdColumnIndex() {
+        return idColumnIndex;
+    }
+
+    public String getDateFormat() {
+        return dateFormat;
     }
 }

@@ -7,5 +7,6 @@ dependencies {
     implementation "io.quarkus:quarkus-arc"
     implementation "io.quarkus:quarkus-scheduler"
     implementation(project(":auto-maptive-core"))
-    implementation(project(":auto-maptive-client-retrofit"))
+//    implementation(project(":auto-maptive-client-retrofit"))
+    implementation(project(":auto-maptive-client-resteasy"))
 }

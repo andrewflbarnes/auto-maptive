@@ -73,7 +73,7 @@ public class Application {
     }
 
     private MaptiveModifiedHandler buildHandler() {
-        return new UpdateMaptiveModifiedHandler();
+        return new UpdateMaptiveModifiedHandler(config.getIdColumnIndex());
     }
 
     private MaptiveClient buildClient() {
@@ -82,7 +82,7 @@ public class Application {
 
     private MaptiveDataDao buildDao() throws IOException {
         try {
-            return XlsxMaptiveDataDao.forFile(config.getFile());
+            return XlsxMaptiveDataDao.forFile(config.getFile(), config.getIdColumn(), config.getDateFormat());
         } catch (NotXlsxFileException e) {
             throw new AppException(e.getMessage());
         }

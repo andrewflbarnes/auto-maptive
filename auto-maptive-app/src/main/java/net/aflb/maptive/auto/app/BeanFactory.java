@@ -1,6 +1,5 @@
 package net.aflb.maptive.auto.app;
 
-import net.aflb.maptive.auto.client.retrofit.RetrofitMaptiveClient;
 import net.aflb.maptive.auto.core.client.MaptiveClient;
 import net.aflb.maptive.auto.core.io.MaptiveDataDao;
 import net.aflb.maptive.auto.core.io.xlsx.XlsxMaptiveDataDao;
@@ -33,7 +32,9 @@ public class BeanFactory {
 
     @Produces
     public MaptiveClient client() {
-        return RetrofitMaptiveClient.production(config.key(), config.map());
+//        return RetrofitMaptiveClient.production(config.key(), config.map());
+        return ResteasyMaptiveClient.production(config.key(), config.map());
+//        return SimpleHttpClient.production(config.key(), config.map());
     }
 
     @Produces
