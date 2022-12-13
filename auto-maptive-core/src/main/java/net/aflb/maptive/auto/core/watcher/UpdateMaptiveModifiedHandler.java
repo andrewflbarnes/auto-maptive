@@ -25,7 +25,7 @@ public class UpdateMaptiveModifiedHandler implements MaptiveModifiedHandler {
     @Override
     public void onUpdate(List<List<String>> serverData, Map<MaptiveId, MaptiveData> localData, MaptiveDataDao dao, MaptiveClient client) {
         final var serverIds = serverData.stream()
-            .map(md -> md.get(2))
+            .map(md -> md.get(idColumnIndex))
             .collect(Collectors.toSet());
 
         final var localIds = localData.keySet().stream()

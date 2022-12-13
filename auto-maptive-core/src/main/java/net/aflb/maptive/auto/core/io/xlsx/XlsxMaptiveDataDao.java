@@ -90,7 +90,6 @@ public class XlsxMaptiveDataDao implements MaptiveDataDao {
                                 }
                                 return formatter.formatCellValue(r);
                             })
-                            .map(v -> v.replace("\"", ""))
                             .map(v -> v.replaceAll("\\s*$", ""))
                             .map(v -> v.replaceAll("^\\s*", ""))
                             .forEachOrdered(item::add);
